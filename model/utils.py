@@ -155,6 +155,7 @@ class DemoLoader (Dataset):
         return img
 
     def img_preprocess(self):
+        """读取images，并对其执行transform，输出tensor"""
         img_path   =  self.images
         img  = Image.open(img_path).convert('RGB')
 
@@ -172,6 +173,7 @@ class DemoLoader (Dataset):
 def weights_init_xavier(m):
     classname = m.__class__.__name__
     if classname.find('Conv2d') != -1:
+        # NOTE: xavier初始化2010年提出的一种初始化方法，旨在控制每次传播都有相同的方差。
         init.xavier_normal(m.weight.data)
 
 
