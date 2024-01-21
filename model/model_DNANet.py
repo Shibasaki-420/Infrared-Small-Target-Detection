@@ -91,9 +91,12 @@ class DNANet(nn.Module):
     def __init__(self, num_classes, input_channels, block, num_blocks, nb_filter,deep_supervision=False):
         super(DNANet, self).__init__()
         self.relu = nn.ReLU(inplace = True)
+        # TODO: 什么是deep_supervision
         self.deep_supervision = deep_supervision
         self.pool  = nn.MaxPool2d(2, 2)
+        # NOTE: 上采样层的双线性插值法：factor=2表示扩展为原来的两倍长宽，在中间插入线性增加的做法
         self.up    = nn.Upsample(scale_factor=2,   mode='bilinear', align_corners=True)
+        # NOTE: 为0.5时，直接取左上角的数字
         self.down  = nn.Upsample(scale_factor=0.5, mode='bilinear', align_corners=True)
 
         self.up_4  = nn.Upsample(scale_factor=4,   mode='bilinear', align_corners=True)
@@ -136,10 +139,12 @@ class DNANet(nn.Module):
             self.final  = nn.Conv2d (nb_filter[0], num_classes, kernel_size=1)
 
     def _make_layer(self, block, input_channels,  output_channels, num_blocks=1):
+        """将num_blocks个block顺序连接。其中每个block的设定都是input_channels和output_channels"""
         layers = []
         layers.append(block(input_channels, output_channels))
         for i in range(num_blocks-1):
             layers.append(block(output_channels, output_channels))
+        # NOTE: 非常好的写法，先用列表装起来，然后给他拆了装Sequential里面
         return nn.Sequential(*layers)
 
     def forward(self, input):
