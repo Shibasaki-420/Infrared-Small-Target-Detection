@@ -18,6 +18,7 @@ from model.model_DNANet import  Res_CBAM_block
 from model.model_DNANet import  DNANet
 
 class Trainer(object):
+    """构造成功之际，则立即使用args来开始测试"""
     def __init__(self, args):
 
         # Initial
@@ -44,6 +45,7 @@ class Trainer(object):
         if args.model   == 'DNANet':
             model       = DNANet(num_classes=1,input_channels=args.in_channels, block=Res_CBAM_block, num_blocks=num_blocks, nb_filter=nb_filter, deep_supervision=args.deep_supervision)
         model           = model.cuda()
+        # NOTE: 权重初始化的好方法
         model.apply(weights_init_xavier)
         print("Model Initializing")
         self.model      = model
@@ -85,6 +87,7 @@ class Trainer(object):
                 ture_positive_rate, false_positive_rate, recall, precision= self.ROC.get()
                 _, mean_IOU = self.mIoU.get()
             FA, PD = self.PD_FA.get(len(val_img_ids))
+            # 将FA和PD使用scipy.io.savemat方法存储成一个.mat文件，这个是matlab的文件格式
             scio.savemat(dataset_dir + '/' +  'value_result'+ '/' +args.st_model  + '_PD_FA_' + str(255),
                          {'number_record1': FA, 'number_record2': PD})
 
