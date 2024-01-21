@@ -19,6 +19,7 @@ def load_dataset (root, dataset, split_method):
 
 
 def load_param(channel_size, backbone):
+    """通过设定channel_size和backbone来得到不同大小的DNANet"""
     if channel_size == 'one':
         nb_filter = [4, 8, 16, 32, 64]
     elif channel_size == 'two':
