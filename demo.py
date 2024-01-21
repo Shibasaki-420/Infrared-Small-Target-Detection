@@ -10,7 +10,7 @@ from model.load_param_data import load_param
 
 # Model
 from model.model_DNANet import  Res_CBAM_block
-from model.model_ACM    import  ACM
+# from model.model_ACM    import  ACM
 from model.model_DNANet import  DNANet
 
 def parse_args():
@@ -80,9 +80,10 @@ class Trainer(object):
         # Choose and load model (this paper is finished by one GPU)
         if args.model   == 'DNANet':
             model       = DNANet(num_classes=1,input_channels=args.in_channels, block=Res_CBAM_block, num_blocks=num_blocks, nb_filter=nb_filter, deep_supervision=args.deep_supervision)
-        elif args.model == 'ACM':
-            model       = ACM   (args.in_channels, layers=[args.blocks] * 3, fuse_mode=args.fuse_mode, tiny=False, classes=1)
+        # elif args.model == 'ACM':
+        #     model       = ACM   (args.in_channels, layers=[args.blocks] * 3, fuse_mode=args.fuse_mode, tiny=False, classes=1)
         model           = model.cuda()
+        # NOTE: 这里在使用自己定义好的weights_init_xavier函数来初始化网络的权重。
         model.apply(weights_init_xavier)
         print("Model Initializing")
         self.model      = model
@@ -94,6 +95,7 @@ class Trainer(object):
         # Test
         self.model.eval()
         img = img.cuda()
+        # NOTE: 插入一个维度，使其在第0维
         img = torch.unsqueeze(img,0)
 
         if args.deep_supervision == 'True':
@@ -101,6 +103,8 @@ class Trainer(object):
             pred  = preds[-1]
         else:
             pred  = self.model(img)
+
+        # NOTE: 拿到DNA推理的一片特征图之后，就画出来了。可见demo没有做后面的检测部分。
         save_Pred_GT_visulize(pred, args.img_demo_dir, args.img_demo_index, args.suffix)
 
 
