@@ -177,25 +177,59 @@ class DNANet(nn.Module):
         # NOTE: 非常好的写法，先用列表装起来，然后给他拆了装Sequential里面
         return nn.Sequential(*layers)
 
+    # def forward(self, input):
+    #     x0_0 = self.conv0_0(input)
+    #     x1_0 = self.conv1_0(self.pool(x0_0))
+    #     x0_1 = self.conv0_1(torch.cat([x0_0, self.up(x1_0)], 1))
+
+    #     x2_0 = self.conv2_0(self.pool(x1_0))
+    #     x1_1 = self.conv1_1(torch.cat([x1_0, self.up(x2_0),self.down(x0_1)], 1))
+    #     x0_2 = self.conv0_2(torch.cat([x0_0, x0_1, self.up(x1_1)], 1))
+
+    #     x3_0 = self.conv3_0(self.pool(x2_0))
+    #     x2_1 = self.conv2_1(torch.cat([x2_0, self.up(x3_0),self.down(x1_1)], 1))
+    #     x1_2 = self.conv1_2(torch.cat([x1_0, x1_1, self.up(x2_1),self.down(x0_2)], 1))
+    #     x0_3 = self.conv0_3(torch.cat([x0_0, x0_1, x0_2, self.up(x1_2)], 1))
+
+    #     x4_0 = self.conv4_0(self.pool(x3_0))
+    #     x3_1 = self.conv3_1(torch.cat([x3_0, self.up(x4_0),self.down(x2_1)], 1))
+    #     x2_2 = self.conv2_2(torch.cat([x2_0, x2_1, self.up(x3_1),self.down(x1_2)], 1))
+    #     x1_3 = self.conv1_3(torch.cat([x1_0, x1_1, x1_2, self.up(x2_2),self.down(x0_3)], 1))
+    #     x0_4 = self.conv0_4(torch.cat([x0_0, x0_1, x0_2, x0_3, self.up(x1_3)], 1))
+
+    #     Final_x0_4 = self.conv0_4_final(
+    #         torch.cat([self.up_16(self.conv0_4_1x1(x4_0)),self.up_8(self.conv0_3_1x1(x3_1)),
+    #                    self.up_4 (self.conv0_2_1x1(x2_2)),self.up  (self.conv0_1_1x1(x1_3)), x0_4], 1))
+
+    #     if self.deep_supervision: # 如果ds，就是从4个
+    #         output1 = self.final1(x0_1)
+    #         output2 = self.final2(x0_2)
+    #         output3 = self.final3(x0_3)
+    #         output4 = self.final4(Final_x0_4)
+    #         return [output1, output2, output3, output4]
+    #     else:
+    #         output = self.final(Final_x0_4)
+    #         return output
+
     def forward(self, input):
         # TODO: 改进实验SPCConv
         x0_0 = self.conv0_0(input)
-        x1_0 = self.conv1_0(self.pool(x0_0))
+        x1_0 = self.conv1_0(self.down0_0(x0_0))
         x0_1 = self.conv0_1(torch.cat([x0_0, self.up(x1_0)], 1))
 
-        x2_0 = self.conv2_0(self.pool(x1_0))
-        x1_1 = self.conv1_1(torch.cat([x1_0, self.up(x2_0),self.down(x0_1)], 1))
+        x2_0 = self.conv2_0(self.down1_0(x1_0))
+        x1_1 = self.conv1_1(torch.cat([x1_0, self.up(x2_0),self.down0_1(x0_1)], 1))
         x0_2 = self.conv0_2(torch.cat([x0_0, x0_1, self.up(x1_1)], 1))
 
-        x3_0 = self.conv3_0(self.pool(x2_0))
-        x2_1 = self.conv2_1(torch.cat([x2_0, self.up(x3_0),self.down(x1_1)], 1))
-        x1_2 = self.conv1_2(torch.cat([x1_0, x1_1, self.up(x2_1),self.down(x0_2)], 1))
+        x3_0 = self.conv3_0(self.down2_0(x2_0))
+        x2_1 = self.conv2_1(torch.cat([x2_0, self.up(x3_0),self.down1_1(x1_1)], 1))
+        x1_2 = self.conv1_2(torch.cat([x1_0, x1_1, self.up(x2_1),self.down0_2(x0_2)], 1))
         x0_3 = self.conv0_3(torch.cat([x0_0, x0_1, x0_2, self.up(x1_2)], 1))
 
-        x4_0 = self.conv4_0(self.pool(x3_0))
-        x3_1 = self.conv3_1(torch.cat([x3_0, self.up(x4_0),self.down(x2_1)], 1))
-        x2_2 = self.conv2_2(torch.cat([x2_0, x2_1, self.up(x3_1),self.down(x1_2)], 1))
-        x1_3 = self.conv1_3(torch.cat([x1_0, x1_1, x1_2, self.up(x2_2),self.down(x0_3)], 1))
+        x4_0 = self.conv4_0(self.down3_0(x3_0))
+        x3_1 = self.conv3_1(torch.cat([x3_0, self.up(x4_0),self.down2_1(x2_1)], 1))
+        x2_2 = self.conv2_2(torch.cat([x2_0, x2_1, self.up(x3_1),self.down1_2(x1_2)], 1))
+        x1_3 = self.conv1_3(torch.cat([x1_0, x1_1, x1_2, self.up(x2_2),self.down0_3(x0_3)], 1))
         x0_4 = self.conv0_4(torch.cat([x0_0, x0_1, x0_2, x0_3, self.up(x1_3)], 1))
 
         Final_x0_4 = self.conv0_4_final(
