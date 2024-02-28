@@ -21,6 +21,7 @@ def parse_args():
                         help='model name: DNANet,  ACM')
 
     # parameter for DNANet
+    #NOTE: channel_size默认是three，所以对应的nb_filter就是[16, 32, 64, 128, 256]
     parser.add_argument('--channel_size', type=str, default='three',
                         help='one,  two,  three,  four')
     parser.add_argument('--backbone', type=str, default='resnet_18',

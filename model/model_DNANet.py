@@ -26,6 +26,7 @@ class VGG_CBAM_Block(nn.Module):
         return out
 
 class ChannelAttention(nn.Module):
+    """通道注意力"""
     def __init__(self, in_planes, ratio=16):
         super(ChannelAttention, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
@@ -41,6 +42,7 @@ class ChannelAttention(nn.Module):
         return self.sigmoid(out)
 
 class SpatialAttention(nn.Module):
+    """空间注意力"""
     def __init__(self, kernel_size=7):
         super(SpatialAttention, self).__init__()
         assert kernel_size in (3, 7), 'kernel size must be 3 or 7'
@@ -55,6 +57,7 @@ class SpatialAttention(nn.Module):
         return self.sigmoid(x)
 
 class Res_CBAM_block(nn.Module):
+    #NOTE: Res_CBAM_block就是cbrcb，然后空间注意一下，然后再通道注意一下，再残差连接
     def __init__(self, in_channels, out_channels, stride = 1):
         super(Res_CBAM_block, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size = 3, stride = stride, padding = 1)
@@ -81,28 +84,55 @@ class Res_CBAM_block(nn.Module):
         out = self.relu(out)
         out = self.conv2(out)
         out = self.bn2(out)
-        out = self.ca(out) * out
-        out = self.sa(out) * out
-        out += residual
+
+        # TODO: 消融实验1 ca/sa
+        # out = self.ca(out) * out    # 通道注意力
+        # out = self.sa(out) * out    # 空间注意力
+
+        out += residual             # 残差连接
+
         out = self.relu(out)
         return out
+
+class SPDConv(nn.Module):
+    # Changing the dimension of the Tensor
+    def __init__(self, channels):
+        super().__init__()
+        self.channels = channels
+        self.conv = nn.Conv2d(4*self.channels, self.channels, kernel_size=3, padding=1, bias=False)
+
+    def forward(self, x):
+        x = torch.cat([x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1)
+        return self.conv(x)
 
 class DNANet(nn.Module):
     def __init__(self, num_classes, input_channels, block, num_blocks, nb_filter,deep_supervision=False):
         super(DNANet, self).__init__()
         self.relu = nn.ReLU(inplace = True)
-        # TODO: 什么是deep_supervision
+
         self.deep_supervision = deep_supervision
         self.pool  = nn.MaxPool2d(2, 2)
         # NOTE: 上采样层的双线性插值法：factor=2表示扩展为原来的两倍长宽，在中间插入线性增加的做法
         self.up    = nn.Upsample(scale_factor=2,   mode='bilinear', align_corners=True)
         # NOTE: 为0.5时，直接取左上角的数字
         self.down  = nn.Upsample(scale_factor=0.5, mode='bilinear', align_corners=True)
+        # TODO: 改进实验SPD-conv
+        self.down0_0 = SPDConv(nb_filter[0])
+        self.down0_1 = SPDConv(nb_filter[0])
+        self.down0_2 = SPDConv(nb_filter[0])
+        self.down0_3 = SPDConv(nb_filter[0])
+        self.down1_0 = SPDConv(nb_filter[1])
+        self.down1_1 = SPDConv(nb_filter[1])
+        self.down1_2 = SPDConv(nb_filter[1])
+        self.down2_0 = SPDConv(nb_filter[2])
+        self.down2_1 = SPDConv(nb_filter[2])
+        self.down3_0 = SPDConv(nb_filter[3])
 
         self.up_4  = nn.Upsample(scale_factor=4,   mode='bilinear', align_corners=True)
         self.up_8  = nn.Upsample(scale_factor=8,   mode='bilinear', align_corners=True)
         self.up_16 = nn.Upsample(scale_factor=16,  mode='bilinear', align_corners=True)
 
+        #NOTE: _make_layer有四个参数：block, input_c, output_c, num_block。其中nb_filter是每一层的通道数，num_blocks是连续拼接的block数量，用iooo连接法
         self.conv0_0 = self._make_layer(block, input_channels, nb_filter[0])
         self.conv1_0 = self._make_layer(block, nb_filter[0],  nb_filter[1], num_blocks[0])
         self.conv2_0 = self._make_layer(block, nb_filter[1],  nb_filter[2], num_blocks[1])
@@ -148,6 +178,7 @@ class DNANet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, input):
+        # TODO: 改进实验SPCConv
         x0_0 = self.conv0_0(input)
         x1_0 = self.conv1_0(self.pool(x0_0))
         x0_1 = self.conv0_1(torch.cat([x0_0, self.up(x1_0)], 1))
@@ -171,7 +202,7 @@ class DNANet(nn.Module):
             torch.cat([self.up_16(self.conv0_4_1x1(x4_0)),self.up_8(self.conv0_3_1x1(x3_1)),
                        self.up_4 (self.conv0_2_1x1(x2_2)),self.up  (self.conv0_1_1x1(x1_3)), x0_4], 1))
 
-        if self.deep_supervision:
+        if self.deep_supervision: # 如果ds，就是从4个
             output1 = self.final1(x0_1)
             output2 = self.final2(x0_2)
             output3 = self.final3(x0_3)

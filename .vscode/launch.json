@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "DNANet Test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "args": [
+                "--base_size=256",
+                "--crop_size=256",
+                "--st_model=DNANet",
+                "--model_dir=NUDT-SIRST_DNANet_17_01_2024_09_14_27_wDS/mIoU__DNANet_NUDT-SIRST_epoch.pth.tar",
+                "--dataset=NUDT-SIRST",
+                "--split_method=50_50",
+                "--model=DNANet",
+                "--backbone=resnet_18",
+                "--deep_supervision=True",
+                "--test_batch_size=1",
+                "--mode=TXT"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}

@@ -110,6 +110,7 @@ class TestSetLoader(Dataset):
         mask = mask.resize((base_size, base_size), Image.NEAREST)
 
         # final transform
+        #NOTE: 这一行将[256, 256]扩充成了[256, 256, 3]，其中第一通道和第二通道都是全0
         img, mask = np.array(img), np.array(mask, dtype=np.float32)  # img: <class 'mxnet.ndarray.ndarray.NDArray'> (512, 512, 3)
         return img, mask
 
@@ -118,6 +119,8 @@ class TestSetLoader(Dataset):
         img_id = self._items[idx]  # idx：('../SIRST', 'Misc_70') 成对出现，因为我的workers设置为了2
         img_path   = self.images+'/'+img_id+self.suffix    # img_id的数值正好补了self._image_path在上面定义的2个空
         label_path = self.masks +'/'+img_id+self.suffix
+        #NOTE: 为什么样本是[1, 3, 256, 256]，实际上三个通道是一样的
+        imgg = Image.open(img_path)
         img  = Image.open(img_path).convert('RGB')  ##由于输入的三通道、单通道图像都有，所以统一转成RGB的三通道，这也符合Unet等网络的期待尺寸
         mask = Image.open(label_path)
         # synchronized transform

@@ -29,6 +29,7 @@ def load_param(channel_size, backbone):
     elif channel_size == 'four':
         nb_filter = [32, 64, 128, 256, 512]
 
+    #NOTE: backbone的唯一影响就在这里
     if   backbone == 'resnet_10':
         num_blocks = [1, 1, 1, 1]
     elif backbone == 'resnet_18':
