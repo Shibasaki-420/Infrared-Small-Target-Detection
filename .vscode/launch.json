@@ -10,7 +10,7 @@
                 "--base_size=256",
                 "--crop_size=256",
                 "--st_model=DNANet",
-                "--model_dir=NUDT-SIRST_DNANet_17_01_2024_09_14_27_wDS/mIoU__DNANet_NUDT-SIRST_epoch.pth.tar",
+                "--model_dir=NUDT-SIRST_DNANet_29_02_2024_08_32_39_wDS/mIoU__DNANet_NUDT-SIRST_epoch.pth.tar",
                 "--dataset=NUDT-SIRST",
                 "--split_method=50_50",
                 "--model=DNANet",

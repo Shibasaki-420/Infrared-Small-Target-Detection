@@ -4,8 +4,7 @@
 base_size=256
 crop_size=256
 st_model="DNANet"
-# TODO: 这里的训练还没做
-model_dir="NUDT-SIRST_DNANet_12_01_2024_23_05_14_wDS/mIoU__DNANet_NUDT-SIRST_epoch.pth.tar"
+model_dir="NUDT-SIRST_DNANet_29_02_2024_08_32_39_wDS/mIoU__DNANet_NUDT-SIRST_epoch.pth.tar"
 dataset="NUDT-SIRST"
 split_method="50_50"
 model="DNANet"
